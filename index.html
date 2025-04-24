@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Verse & Check-In</title>
+    <style>
+        :root {
+            --primary: #8e9aaf;
+            --secondary: #cbc0d3;
+            --accent: #efd3d7;
+            --light: #feeafa;
+            --dark: #5e6472;
+            --success: #8db596;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            color: var(--primary);
+            font-weight: normal;
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .date {
+            color: var(--secondary);
+            font-style: italic;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .poem-title {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .poem-author {
+            font-style: italic;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .poem-content {
+            white-space: pre-line;
+            line-height: 1.8;
+        }
+        
+        .puzzle-container {
+            margin-top: 2rem;
+        }
+        
+        .puzzle-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .puzzle-hint {
+            font-style: italic;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .word-puzzle {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .letter-box {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            background-color: var(--light);
+            cursor: pointer;
+        }
+        
+        .letter-box.filled {
+            background-color: var(--accent);
+        }
+        
+        .letter-box.correct {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .check-in-container {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .check-in-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .check-in-button:hover {
+            background-color: var(--dark);
+            transform: translateY(-2px);
+        }
+        
+        .check-in-status {
+            margin-top: 1rem;
+            font-style: italic;
+            color: var(--success);
+        }
+        
+        .history-container {
+            margin-top: 2rem;
+        }
+        
+        .history-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .history-dots {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .day-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+        }
+        
+        .day-dot.checked-in {
+            background-color: var(--success);
+        }
+        
+        .day-labels {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.7rem;
+            color: var(--primary);
+        }
+        
+        .day-label {
+            width: 15px;
+            text-align: center;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Daily Verse & Check-In</h1>
+            <div class="date" id="current-date"></div>
+        </header>
+        
+        <div class="card">
+            <div class="poem-title">Invitation to Love</div>
+            <div class="poem-author">by Paul Laurence Dunbar</div>
+            <div class="poem-content">Come when the nights are bright with stars
+Or come when the moon is mellow;
+Come when the sun his golden bars
+Drops on the hay-field yellow.
+Come in the twilight soft and gray,
+Come in the night or come in the day,
+Come, O love, whene'er you may,
+And you are welcome, welcome.</div>
+        </div>
+        
+        <div class="card">
+            <div class="puzzle-title">Today's Word Puzzle</div>
+            <div class="puzzle-hint">Nigerian music sensation behind the hit "Last Last" (5 letters)</div>
+            
+            <div class="word-puzzle" id="puzzle">
+                <div class="letter-box" onclick="fillLetter(0)"></div>
+                <div class="letter-box" onclick="fillLetter(1)"></div>
+                <div class="letter-box" onclick="fillLetter(2)"></div>
+                <div class="letter-box" onclick="fillLetter(3)"></div>
+                <div class="letter-box" onclick="fillLetter(4)"></div>
+            </div>
+            
+            <div class="check-in-container">
+                <button class="check-in-button" id="check-in-btn">I'm doing well today</button>
+                <div class="check-in-status" id="check-in-status"></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="history-title">Recent Check-ins</div>
+            <div class="history-dots">
+                <div class="day-dot checked-in"></div>
+                <div class="day-dot checked-in"></div>
+                <div class="day-dot"></div>
+                <div class="day-dot checked-in"></div>
+                <div class="day-dot checked-in"></div>
+                <div class="day-dot checked-in"></div>
+                <div class="day-dot" id="today-dot"></div>
+            </div>
+            <div class="day-labels">
+                <div class="day-label">F</div>
+                <div class="day-label">S</div>
+                <div class="day-label">S</div>
+                <div class="day-label">M</div>
+                <div class="day-label">T</div>
+                <div class="day-label">W</div>
+                <div class="day-label">T</div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Created with care for daily well-being</p>
+    </footer>
+    
+    <script>
+        // Set current date
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', dateOptions);
+        
+        // Puzzle functionality
+        const solution = "BURNA";
+        let currentGuess = ["", "", "", "", ""];
+        let currentPosition = 0;
+        
+        function fillLetter(position) {
+            if (currentPosition < 5) {
+                const letters = "BURNA";
+                const letterBox = document.querySelectorAll('.letter-box')[position];
+                letterBox.textContent = letters[currentPosition];
+                letterBox.classList.add('filled');
+                currentGuess[position] = letters[currentPosition];
+                currentPosition++;
+                
+                // Check if completed
+                if (currentPosition === 5) {
+                    checkAnswer();
+                }
+            }
+        }
+        
+        function checkAnswer() {
+            const boxes = document.querySelectorAll('.letter-box');
+            for (let i = 0; i < 5; i++) {
+                if (currentGuess[i] === solution[i]) {
+                    boxes[i].classList.add('correct');
+                }
+            }
+        }
+        
+        // Check-in functionality
+        document.getElementById('check-in-btn').addEventListener('click', function() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' });
+            document.getElementById('check-in-status').textContent = `Last checked in at ${timeStr}`;
+            
+            // Update today's dot
+            document.getElementById('today-dot').classList.add('checked-in');
+            
+            // Show confirmation
+            this.textContent = "✓ Checked In";
+            this.disabled = true;
+        });
+    </script>
+</body>
+</html>
