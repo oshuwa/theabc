@@ -302,6 +302,22 @@ And you are welcome, welcome.</div>
             this.textContent = "✓ Checked In";
             this.disabled = true;
         });
+        // Load today's poem from JSON file
+async function loadTodaysPoem() {
+  try {
+    const response = await fetch('/_poems/current-poem.json');
+    const poem = await response.json();
+    
+    document.querySelector('.poem-title').textContent = poem.title;
+    document.querySelector('.poem-author').textContent = `by ${poem.author}`;
+    document.querySelector('.poem-content').textContent = poem.content;
+  } catch (error) {
+    console.error('Error loading poem:', error);
+  }
+}
+
+// Call this function when the page loads
+window.addEventListener('DOMContentLoaded', loadTodaysPoem);
     </script>
 </body>
 </html>
