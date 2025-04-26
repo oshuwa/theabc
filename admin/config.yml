@@ -1,4 +1,4 @@
-backend:
+ebackend:
   name: github
   repo: oshuwa/theabc  # Replace with your actual GitHub username/repo
   branch: main # Branch to update
@@ -9,7 +9,7 @@ public_folder: "/images/uploads" # Where media is accessed from the public site
 collections:
   - name: "poems" # Used in routes, e.g., /admin/collections/poems
     label: "Poem" # Used in the UI
-    folder: "theabc/_poems" # The path to the folder where poems are stored
+    folder: "theabscondencecorrespondence/_poems" # The path to the folder where poems are stored
     create: true # Allow users to create new documents in this collection
     slug: "{{year}}-{{month}}-{{day}}" # Filename template, e.g., 2025-04-25
     fields: # The fields for each document
