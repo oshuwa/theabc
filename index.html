@@ -89,6 +89,13 @@
             font-weight: 400;
         }
         
+        .poem-loader {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--primary);
+            font-style: italic;
+        }
+        
         .puzzle-container {
             margin-top: 2rem;
         }
@@ -243,17 +250,14 @@
                 <div class="date" id="current-date"></div>
             </header>
             
-            <div class="card">
-                <div class="poem-title">Invitation to Love</div>
-                <div class="poem-author">by Paul Laurence Dunbar</div>
-                <div class="poem-content">Come when the nights are bright with stars
-Or come when the moon is mellow;
-Come when the sun his golden bars
-Drops on the hay-field yellow.
-Come in the twilight soft and gray,
-Come in the night or come in the day,
-Come, O love, whene'er you may,
-And you are welcome, welcome.</div>
+            <!-- Modified poem card with placeholders -->
+            <div class="card" id="poem-card">
+                <div class="poem-title" id="poem-title">Loading today's poem...</div>
+                <div class="poem-author" id="poem-author"></div>
+                <div class="poem-content" id="poem-content"></div>
+                <div class="poem-loader" id="poem-loader">
+                    <em>Loading poem...</em>
+                </div>
             </div>
             
             <div class="card">
@@ -351,18 +355,212 @@ And you are welcome, welcome.</div>
             this.disabled = true;
         });
         
-        // Load today's poem from JSON file
+        // Load today's poem from CMS
         async function loadTodaysPoem() {
             try {
-                const response = await fetch('/_poems/current-poem.json');
-                const poem = await response.json();
+                // Hide poem content until loaded
+                document.getElementById('poem-title').style.display = 'none';
+                document.getElementById('poem-author').style.display = 'none';
+                document.getElementById('poem-content').style.display = 'none';
+                document.getElementById('poem-loader').style.display = 'block';
                 
-                document.querySelector('.poem-title').textContent = poem.title;
-                document.querySelector('.poem-author').textContent = `by ${poem.author}`;
-                document.querySelector('.poem-content').textContent = poem.content;
+                // Try different possible paths where CMS content might be stored
+                const possiblePaths = [
+                    '/poems/index.json',
+                    '/poems/poems.json',
+                    '/_poems/index.json',
+                    '/_poems/poems.json',
+                    '/admin/poems.json',
+                    '/content/poems.json'
+                ];
+                
+                let response = null;
+                let poems = null;
+                
+                // Try each path until we find one that works
+                for (const path of possiblePaths) {
+                    try {
+                        const tempResponse = await fetch(path);
+                        if (tempResponse.ok) {
+                            response = tempResponse;
+                            break;
+                        }
+                    } catch (e) {
+                        // Continue to next path
+                        console.log(`Path ${path} not found, trying next...`);
+                    }
+                }
+                
+                // If we didn't find a valid path, try one more approach - individual files
+                if (!response) {
+                    // Try to fetch the poem collection directly from Netlify CMS
+                    try {
+                        const cmsResponse = await fetch('/admin/config.yml');
+                        if (cmsResponse.ok) {
+                            // If we can access the config, we'll try to parse it - this is advanced
+                            console.log("Found CMS config, attempting to determine content path...");
+                        }
+                    } catch (e) {
+                        console.log("Could not access CMS config");
+                    }
+                    
+                    // Fallback - try a single latest poem file
+                    try {
+                        const fallbackResponse = await fetch('/poems/latest.json');
+                        if (fallbackResponse.ok) {
+                            // For a single poem file, we'll use it directly
+                            const poem = await fallbackResponse.json();
+                            displayPoem(poem);
+                            return;
+                        }
+                    } catch (e) {
+                        console.log("Could not find latest poem file");
+                    }
+                    
+                    throw new Error("Could not find poem content in any expected location");
+                }
+                
+                // If we got here, we found a valid collection of poems
+                poems = await response.json();
+                
+                // Handle different possible JSON structures
+                if (Array.isArray(poems)) {
+                    // Direct array of poems
+                    processPoems(poems);
+                } else if (poems.poems && Array.isArray(poems.poems)) {
+                    // Nested array under 'poems' key
+                    processPoems(poems.poems);
+                } else if (poems.data && Array.isArray(poems.data)) {
+                    // Nested array under 'data' key
+                    processPoems(poems.data);
+                } else {
+                    // Single poem object
+                    displayPoem(poems);
+                }
             } catch (error) {
                 console.error('Error loading poem:', error);
+                displayError("Error loading today's poem. Please try again later.");
+                
+                // Fallback to hardcoded poem if loading fails
+                displayFallbackPoem();
             }
+        }
+        
+        // Process an array of poems to find today's poem
+        function processPoems(poems) {
+            // Get today's date in YYYY-MM-DD format for comparison
+            const today = new Date();
+            const todayFormatted = today.toISOString().split('T')[0];
+            
+            // Find today's poem (poem with the closest date not in the future)
+            let todaysPoem = null;
+            let closestDate = null;
+            
+            poems.forEach(poem => {
+                // Handle different date formats from CMS
+                let poemDate;
+                if (poem.date) {
+                    poemDate = new Date(poem.date);
+                } else if (poem.publishDate) {
+                    poemDate = new Date(poem.publishDate);
+                } else if (poem.published_at) {
+                    poemDate = new Date(poem.published_at);
+                } else {
+                    // Skip poems without dates
+                    return;
+                }
+                
+                // Skip invalid dates
+                if (isNaN(poemDate.getTime())) return;
+                
+                const poemDateFormatted = poemDate.toISOString().split('T')[0];
+                
+                // Exact match for today
+                if (poemDateFormatted === todayFormatted) {
+                    todaysPoem = poem;
+                    closestDate = poemDate;
+                    return; // Found today's poem, no need to check others
+                }
+                
+                // Skip future poems
+                if (poemDate > today) return;
+                
+                // If this is the first valid poem or it's more recent than our current match
+                if (!closestDate || poemDate > closestDate) {
+                    closestDate = poemDate;
+                    todaysPoem = poem;
+                }
+            });
+            
+            if (todaysPoem) {
+                displayPoem(todaysPoem);
+            } else {
+                displayError("No poem scheduled for today. Please check back tomorrow.");
+                
+                // Fallback to hardcoded poem if no poem found
+                displayFallbackPoem();
+            }
+        }
+        
+        // Display the poem on the page
+        function displayPoem(poem) {
+            // Clear loading indicator
+            document.getElementById('poem-loader').style.display = 'none';
+            
+            // Show poem elements
+            document.getElementById('poem-title').style.display = 'block';
+            document.getElementById('poem-author').style.display = 'block';
+            document.getElementById('poem-content').style.display = 'block';
+            
+            // Handle different property names from CMS
+            const title = poem.title || poem.name || "Untitled";
+            const author = poem.author || poem.poet || poem.writer || "Unknown";
+            const content = poem.content || poem.body || poem.text || "";
+            
+            // Update the poem display
+            document.getElementById('poem-title').textContent = title;
+            document.getElementById('poem-author').textContent = `by ${author}`;
+            document.getElementById('poem-content').textContent = content;
+        }
+        
+        // Display error message
+        function displayError(message) {
+            // Clear loading indicator
+            document.getElementById('poem-loader').style.display = 'none';
+            
+            // Show poem elements
+            document.getElementById('poem-title').style.display = 'block';
+            document.getElementById('poem-author').style.display = 'block';
+            document.getElementById('poem-content').style.display = 'block';
+            
+            // Display error message
+            document.getElementById('poem-title').textContent = "Error";
+            document.getElementById('poem-author').textContent = "";
+            document.getElementById('poem-content').textContent = message;
+        }
+        
+        // Fallback to the original hardcoded poem if loading fails
+        function displayFallbackPoem() {
+            // Clear loading indicator
+            document.getElementById('poem-loader').style.display = 'none';
+            
+            // Show poem elements
+            document.getElementById('poem-title').style.display = 'block';
+            document.getElementById('poem-author').style.display = 'block';
+            document.getElementById('poem-content').style.display = 'block';
+            
+            // Set fallback poem
+            document.getElementById('poem-title').textContent = "Invitation to Love";
+            document.getElementById('poem-author').textContent = "by Paul Laurence Dunbar";
+            document.getElementById('poem-content').textContent = 
+                "Come when the nights are bright with stars\n" +
+                "Or come when the moon is mellow;\n" +
+                "Come when the sun his golden bars\n" +
+                "Drops on the hay-field yellow.\n" +
+                "Come in the twilight soft and gray,\n" +
+                "Come in the night or come in the day,\n" +
+                "Come, O love, whene'er you may,\n" +
+                "And you are welcome, welcome.";
         }
         
         // Call this function when the page loads
