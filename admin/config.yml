@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: theabc  # Replace with your actual GitHub username/repo
+  repo: oshuwa/theabc  # Replace with your actual GitHub username/repo
   branch: main # Branch to update
 
 media_folder: "images/uploads" # Where media will be stored
