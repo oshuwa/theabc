@@ -364,79 +364,97 @@
                 document.getElementById('poem-content').style.display = 'none';
                 document.getElementById('poem-loader').style.display = 'block';
                 
-                // Try different possible paths where CMS content might be stored
-                const possiblePaths = [
-                    '/poems/index.json',
-                    '/poems/poems.json',
-                    '/_poems/index.json',
-                    '/_poems/poems.json',
-                    '/admin/poems.json',
-                    '/content/poems.json'
-                ];
+                // Specific path to your poems folder
+                const poemPath = '/theabc/_poems/';
                 
-                let response = null;
-                let poems = null;
-                
-                // Try each path until we find one that works
-                for (const path of possiblePaths) {
-                    try {
-                        const tempResponse = await fetch(path);
-                        if (tempResponse.ok) {
-                            response = tempResponse;
-                            break;
-                        }
-                    } catch (e) {
-                        // Continue to next path
-                        console.log(`Path ${path} not found, trying next...`);
-                    }
-                }
-                
-                // If we didn't find a valid path, try one more approach - individual files
-                if (!response) {
-                    // Try to fetch the poem collection directly from Netlify CMS
-                    try {
-                        const cmsResponse = await fetch('/admin/config.yml');
-                        if (cmsResponse.ok) {
-                            // If we can access the config, we'll try to parse it - this is advanced
-                            console.log("Found CMS config, attempting to determine content path...");
-                        }
-                    } catch (e) {
-                        console.log("Could not access CMS config");
+                // Try to load the poem collection or index
+                let response;
+                try {
+                    // Try to load a collection/index file first
+                    response = await fetch(`${poemPath}index.json`);
+                    
+                    if (!response.ok) {
+                        // Try another common filename
+                        response = await fetch(`${poemPath}poems.json`);
                     }
                     
-                    // Fallback - try a single latest poem file
-                    try {
-                        const fallbackResponse = await fetch('/poems/latest.json');
-                        if (fallbackResponse.ok) {
-                            // For a single poem file, we'll use it directly
-                            const poem = await fallbackResponse.json();
-                            displayPoem(poem);
-                            return;
+                    if (response.ok) {
+                        // We found a collection file
+                        const poems = await response.json();
+                        
+                        // Process the collection to find today's poem
+                        if (Array.isArray(poems)) {
+                            processPoems(poems);
+                        } else if (poems.poems && Array.isArray(poems.poems)) {
+                            processPoems(poems.poems);
+                        } else if (poems.data && Array.isArray(poems.data)) {
+                            processPoems(poems.data);
+                        } else {
+                            // Single poem object
+                            displayPoem(poems);
                         }
-                    } catch (e) {
-                        console.log("Could not find latest poem file");
+                        return;
+                    }
+                } catch (error) {
+                    console.log("Could not find poem collection, trying individual files...");
+                }
+                
+                // If we didn't find a collection file, try to list files in the directory
+                // Note: This might not work on all servers due to security restrictions
+                try {
+                    // Try loading the latest poem file directly
+                    response = await fetch(`${poemPath}latest.json`);
+                    
+                    if (response.ok) {
+                        const poem = await response.json();
+                        displayPoem(poem);
+                        return;
+                    }
+                } catch (error) {
+                    console.log("Could not find latest poem file");
+                }
+                
+                // As a last resort, try loading the individual poem files by date
+                try {
+                    // Get today's date in YYYY-MM-DD format
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const todayFormatted = `${year}-${month}-${day}`;
+                    
+                    // Try to load today's poem
+                    response = await fetch(`${poemPath}${todayFormatted}.json`);
+                    
+                    if (response.ok) {
+                        const poem = await response.json();
+                        displayPoem(poem);
+                        return;
                     }
                     
-                    throw new Error("Could not find poem content in any expected location");
+                    // If today's poem doesn't exist, try yesterday
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayYear = yesterday.getFullYear();
+                    const yesterdayMonth = String(yesterday.getMonth() + 1).padStart(2, '0');
+                    const yesterdayDay = String(yesterday.getDate()).padStart(2, '0');
+                    const yesterdayFormatted = `${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}`;
+                    
+                    response = await fetch(`${poemPath}${yesterdayFormatted}.json`);
+                    
+                    if (response.ok) {
+                        const poem = await response.json();
+                        displayPoem(poem);
+                        return;
+                    }
+                } catch (error) {
+                    console.log("Could not find date-specific poem files");
                 }
                 
-                // If we got here, we found a valid collection of poems
-                poems = await response.json();
+                // If we've exhausted all options, use the fallback
+                console.log("Falling back to hardcoded poem");
+                displayFallbackPoem();
                 
-                // Handle different possible JSON structures
-                if (Array.isArray(poems)) {
-                    // Direct array of poems
-                    processPoems(poems);
-                } else if (poems.poems && Array.isArray(poems.poems)) {
-                    // Nested array under 'poems' key
-                    processPoems(poems.poems);
-                } else if (poems.data && Array.isArray(poems.data)) {
-                    // Nested array under 'data' key
-                    processPoems(poems.data);
-                } else {
-                    // Single poem object
-                    displayPoem(poems);
-                }
             } catch (error) {
                 console.error('Error loading poem:', error);
                 displayError("Error loading today's poem. Please try again later.");
@@ -451,6 +469,9 @@
             // Get today's date in YYYY-MM-DD format for comparison
             const today = new Date();
             const todayFormatted = today.toISOString().split('T')[0];
+            
+            // Log for debugging
+            console.log("Processing poems collection:", poems);
             
             // Find today's poem (poem with the closest date not in the future)
             let todaysPoem = null;
@@ -475,10 +496,14 @@
                 
                 const poemDateFormatted = poemDate.toISOString().split('T')[0];
                 
+                // Log for debugging
+                console.log(`Checking poem: ${poem.title || 'Untitled'}, Date: ${poemDateFormatted}`);
+                
                 // Exact match for today
                 if (poemDateFormatted === todayFormatted) {
                     todaysPoem = poem;
                     closestDate = poemDate;
+                    console.log("Found exact match for today!");
                     return; // Found today's poem, no need to check others
                 }
                 
@@ -489,12 +514,15 @@
                 if (!closestDate || poemDate > closestDate) {
                     closestDate = poemDate;
                     todaysPoem = poem;
+                    console.log(`Found newer poem: ${poem.title || 'Untitled'}, Date: ${poemDateFormatted}`);
                 }
             });
             
             if (todaysPoem) {
+                console.log("Selected poem:", todaysPoem);
                 displayPoem(todaysPoem);
             } else {
+                console.log("No poem found in collection");
                 displayError("No poem scheduled for today. Please check back tomorrow.");
                 
                 // Fallback to hardcoded poem if no poem found
@@ -511,6 +539,9 @@
             document.getElementById('poem-title').style.display = 'block';
             document.getElementById('poem-author').style.display = 'block';
             document.getElementById('poem-content').style.display = 'block';
+            
+            // Log for debugging
+            console.log("Displaying poem:", poem);
             
             // Handle different property names from CMS
             const title = poem.title || poem.name || "Untitled";
