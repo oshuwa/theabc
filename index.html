@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Verse & Check-In</title>
+    <!-- Add Montserrat Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        : root {
+        :root {
             --primary: #8e9aaf;
             --secondary: #cbc0d3;
             --accent: #efd3d7;
@@ -16,23 +18,27 @@
         
         body {
             font-family: 'Montserrat', sans-serif;
-            background-image: url('background.jpg'); /* Add this line */
-            background-size: cover; /* Makes image cover the full screen */
-            background-position: center; /* Centers the image */
-            background-attachment: fixed; /* Keeps the image fixed while scrolling */
+            background-image: url('background.jpg'); /* Your background image */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: var(--dark);
             line-height: 1.6;
             margin: 0;
             padding: 0;
+            min-height: 100vh;
+        }
+        
+        .overlay {
+            background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white overlay */
+            min-height: 100vh;
+            padding: 2rem 0;
         }
         
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 2rem;
-            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         
         header {
@@ -41,37 +47,38 @@
         }
         
         h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600; /* Semi-bold */
-            /* rest of your existing CSS */
-}
-        
-.poem-title {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500; /* Medium */
-    /* rest of your existing CSS */
+            color: var(--dark);
+            font-weight: 600;
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.8);
         }
         
         .date {
-            color: var(--secondary);
+            color: var(--primary);
             font-style: italic;
+            font-weight: 500;
         }
         
         .card {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.9);
             border-radius: 15px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px); /* Creates a frosted glass effect */
         }
         
         .poem-title {
             font-size: 1.4rem;
+            font-weight: 600;
             margin-bottom: 0.5rem;
+            color: var(--dark);
         }
         
         .poem-author {
             font-style: italic;
+            font-weight: 500;
             color: var(--primary);
             margin-bottom: 1.5rem;
         }
@@ -79,6 +86,7 @@
         .poem-content {
             white-space: pre-line;
             line-height: 1.8;
+            font-weight: 400;
         }
         
         .puzzle-container {
@@ -87,13 +95,16 @@
         
         .puzzle-title {
             font-size: 1.2rem;
+            font-weight: 600;
             margin-bottom: 1rem;
+            color: var(--dark);
         }
         
         .puzzle-hint {
             font-style: italic;
             margin-bottom: 1rem;
             color: var(--primary);
+            font-weight: 500;
         }
         
         .word-puzzle {
@@ -112,8 +123,9 @@
             justify-content: center;
             font-size: 1.2rem;
             text-transform: uppercase;
-            background-color: var(--light);
+            background-color: white;
             cursor: pointer;
+            font-weight: 600;
         }
         
         .letter-box.filled {
@@ -136,20 +148,24 @@
             border: none;
             padding: 1rem 2rem;
             font-size: 1.1rem;
+            font-weight: 500;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         
         .check-in-button:hover {
             background-color: var(--dark);
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
         .check-in-status {
             margin-top: 1rem;
             font-style: italic;
             color: var(--success);
+            font-weight: 500;
         }
         
         .history-container {
@@ -158,7 +174,9 @@
         
         .history-title {
             font-size: 1.2rem;
+            font-weight: 600;
             margin-bottom: 1rem;
+            color: var(--dark);
         }
         
         .history-dots {
@@ -185,6 +203,7 @@
             margin-top: 0.5rem;
             font-size: 0.7rem;
             color: var(--primary);
+            font-weight: 600;
         }
         
         .day-label {
@@ -197,21 +216,37 @@
             margin-top: 3rem;
             color: var(--primary);
             font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>present and accounted for</h1>
-            <div class="date" id="current-date"></div>
-        </header>
-        
-        <div class="card">
-            <div class="poem-title">Invitation to Love</div>
-            <div class="poem-author">by Paul Laurence Dunbar</div>
-            <div class="poem-content">Come when the nights are bright with stars
+    <div class="overlay">
+        <div class="container">
+            <header>
+                <h1>Daily Verse & Check-In</h1>
+                <div class="date" id="current-date"></div>
+            </header>
+            
+            <div class="card">
+                <div class="poem-title">Invitation to Love</div>
+                <div class="poem-author">by Paul Laurence Dunbar</div>
+                <div class="poem-content">Come when the nights are bright with stars
 Or come when the moon is mellow;
 Come when the sun his golden bars
 Drops on the hay-field yellow.
@@ -219,45 +254,46 @@ Come in the twilight soft and gray,
 Come in the night or come in the day,
 Come, O love, whene'er you may,
 And you are welcome, welcome.</div>
-        </div>
-        
-        <div class="card">
-            <div class="puzzle-title">Today's Word Puzzle</div>
-            <div class="puzzle-hint">Nigerian music sensation behind the hit "Last Last" (5 letters)</div>
-            
-            <div class="word-puzzle" id="puzzle">
-                <div class="letter-box" onclick="fillLetter(0)"></div>
-                <div class="letter-box" onclick="fillLetter(1)"></div>
-                <div class="letter-box" onclick="fillLetter(2)"></div>
-                <div class="letter-box" onclick="fillLetter(3)"></div>
-                <div class="letter-box" onclick="fillLetter(4)"></div>
             </div>
             
-            <div class="check-in-container">
-                <button class="check-in-button" id="check-in-btn">I'm doing well today</button>
-                <div class="check-in-status" id="check-in-status"></div>
+            <div class="card">
+                <div class="puzzle-title">Today's Word Puzzle</div>
+                <div class="puzzle-hint">Nigerian music sensation behind the hit "Last Last" (5 letters)</div>
+                
+                <div class="word-puzzle" id="puzzle">
+                    <div class="letter-box" onclick="fillLetter(0)"></div>
+                    <div class="letter-box" onclick="fillLetter(1)"></div>
+                    <div class="letter-box" onclick="fillLetter(2)"></div>
+                    <div class="letter-box" onclick="fillLetter(3)"></div>
+                    <div class="letter-box" onclick="fillLetter(4)"></div>
+                </div>
+                
+                <div class="check-in-container">
+                    <button class="check-in-button" id="check-in-btn">I'm doing well today</button>
+                    <div class="check-in-status" id="check-in-status"></div>
+                </div>
             </div>
-        </div>
-        
-        <div class="card">
-            <div class="history-title">Recent Check-ins</div>
-            <div class="history-dots">
-                <div class="day-dot checked-in"></div>
-                <div class="day-dot checked-in"></div>
-                <div class="day-dot"></div>
-                <div class="day-dot checked-in"></div>
-                <div class="day-dot checked-in"></div>
-                <div class="day-dot checked-in"></div>
-                <div class="day-dot" id="today-dot"></div>
-            </div>
-            <div class="day-labels">
-                <div class="day-label">F</div>
-                <div class="day-label">S</div>
-                <div class="day-label">S</div>
-                <div class="day-label">M</div>
-                <div class="day-label">T</div>
-                <div class="day-label">W</div>
-                <div class="day-label">T</div>
+            
+            <div class="card">
+                <div class="history-title">Recent Check-ins</div>
+                <div class="history-dots">
+                    <div class="day-dot checked-in"></div>
+                    <div class="day-dot checked-in"></div>
+                    <div class="day-dot"></div>
+                    <div class="day-dot checked-in"></div>
+                    <div class="day-dot checked-in"></div>
+                    <div class="day-dot checked-in"></div>
+                    <div class="day-dot" id="today-dot"></div>
+                </div>
+                <div class="day-labels">
+                    <div class="day-label">F</div>
+                    <div class="day-label">S</div>
+                    <div class="day-label">S</div>
+                    <div class="day-label">M</div>
+                    <div class="day-label">T</div>
+                    <div class="day-label">W</div>
+                    <div class="day-label">T</div>
+                </div>
             </div>
         </div>
     </div>
@@ -314,22 +350,23 @@ And you are welcome, welcome.</div>
             this.textContent = "✓ Checked In";
             this.disabled = true;
         });
+        
         // Load today's poem from JSON file
-async function loadTodaysPoem() {
-  try {
-    const response = await fetch('/_poems/current-poem.json');
-    const poem = await response.json();
-    
-    document.querySelector('.poem-title').textContent = poem.title;
-    document.querySelector('.poem-author').textContent = `by ${poem.author}`;
-    document.querySelector('.poem-content').textContent = poem.content;
-  } catch (error) {
-    console.error('Error loading poem:', error);
-  }
-}
-
-// Call this function when the page loads
-window.addEventListener('DOMContentLoaded', loadTodaysPoem);
+        async function loadTodaysPoem() {
+            try {
+                const response = await fetch('/_poems/current-poem.json');
+                const poem = await response.json();
+                
+                document.querySelector('.poem-title').textContent = poem.title;
+                document.querySelector('.poem-author').textContent = `by ${poem.author}`;
+                document.querySelector('.poem-content').textContent = poem.content;
+            } catch (error) {
+                console.error('Error loading poem:', error);
+            }
+        }
+        
+        // Call this function when the page loads
+        window.addEventListener('DOMContentLoaded', loadTodaysPoem);
     </script>
 </body>
 </html>
