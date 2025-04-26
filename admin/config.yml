@@ -17,3 +17,15 @@ collections:
       - {label: "Author", name: "author", widget: "string"}
       - {label: "Publish Date", name: "date", widget: "datetime"}
       - {label: "Content", name: "content", widget: "text"}
+    # other collection settings...
+    fields:
+      - label: 'Publish Date'
+        name: 'date'
+        widget: 'datetime'
+        date_format: 'YYYY-MM-DD' # Date format
+        time_format: 'hh:mm A'    # 12-hour time format with AM/PM
+        format: 'YYYY-MM-DD hh:mm A' # Combined format saved to file
+# CMS configuration
+locale: 'en'
+# Set to UTC timezone
+timezone: 'UTC'
